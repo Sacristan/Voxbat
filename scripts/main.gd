@@ -4,10 +4,12 @@ const GRID_SIZE := 8
 const CellScene := preload("res://scenes/cell.tscn")
 
 var grid: Array = []  # grid[z][x] -> Cell
+var _selected_cell: Cell = null
 
 @onready var grid_root: Node3D = $GridRoot
 @onready var camera_rig = $CameraRig
 @onready var hud = $HUD
+@onready var cell_panel = $CellPanel
 
 
 func _ready() -> void:
@@ -17,6 +19,8 @@ func _ready() -> void:
 	camera_rig.fit_to_grid(GRID_SIZE)
 	GameState.turn_changed.connect(func(p: PlayerData) -> void: hud.update_turn(p.player_name))
 	hud.update_turn(GameState.current_player().player_name)
+	cell_panel.occupy_pressed.connect(_on_occupy_pressed)
+	cell_panel.panel_closed.connect(_on_panel_closed)
 
 
 func _spawn_grid() -> void:
@@ -54,9 +58,24 @@ func _has_adjacent_owned(gx: int, gz: int, player_idx: int) -> bool:
 
 
 func _on_cell_clicked(cell: Cell) -> void:
-	if cell.owner_index != -1:
-		return
-	if not _has_adjacent_owned(cell.grid_x, cell.grid_z, GameState.current_player_index):
-		return
+	# Deselect previous if different cell
+	if _selected_cell != null and _selected_cell != cell:
+		_selected_cell.deselect()
+
+	_selected_cell = cell
+	cell.select()
+
+	var can_occupy := cell.owner_index == -1 and _has_adjacent_owned(cell.grid_x, cell.grid_z, GameState.current_player_index)
+	cell_panel.show_for_cell(cell, can_occupy)
+
+
+func _on_occupy_pressed(cell: Cell) -> void:
 	cell.claim(GameState.current_player())
+	_selected_cell = null
 	GameState.advance_turn()
+
+
+func _on_panel_closed() -> void:
+	if _selected_cell != null:
+		_selected_cell.deselect()
+		_selected_cell = null

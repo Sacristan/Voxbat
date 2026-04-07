@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main01"]
 [ext_resource type="Script" path="res://scripts/camera_controller.gd" id="3_cam01"]
 [ext_resource type="PackedScene" uid="uid://bpqrst123hud1" path="res://ui/hud.tscn" id="2_hud001"]
+[ext_resource type="PackedScene" path="res://ui/cell_panel.tscn" id="4_cp001"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main01")
@@ -20,3 +21,5 @@ shadow_enabled = true
 [node name="GridRoot" type="Node3D" parent="."]
 
 [node name="HUD" parent="." instance=ExtResource("2_hud001")]
+
+[node name="CellPanel" parent="." instance=ExtResource("4_cp001")]
