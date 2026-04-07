@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://bpqrst123hud1"]
+
+[ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud001"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_hud001")
+
+[node name="TurnLabel" type="Label" parent="."]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 300.0
+offset_bottom = 44.0
+text = "Turn: Player A"

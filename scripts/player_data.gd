@@ -1,0 +1,5 @@
+class_name PlayerData
+extends Resource
+
+@export var player_name: String = ""
+@export var color: Color = Color.WHITE
