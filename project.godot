@@ -17,6 +17,7 @@ run/main_scene="res://main.tscn"
 
 [autoload]
 
+Config="*res://scripts/config.gd"
 GameState="*res://scripts/game_state.gd"
 
 [physics]

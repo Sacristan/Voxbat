@@ -9,8 +9,8 @@ script = ExtResource("1_cp001")
 [node name="PanelContainer" type="PanelContainer" parent="."]
 offset_left = 20.0
 offset_top = 80.0
-offset_right = 240.0
-offset_bottom = 300.0
+offset_right = 260.0
+offset_bottom = 360.0
 
 [node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
 layout_mode = 2
@@ -46,3 +46,15 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 text = "OCCUPY"
+
+[node name="RazeButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+visible = false
+text = "RAZE"
+
+[node name="UpgradeButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+visible = false
+text = "UPGRADE"

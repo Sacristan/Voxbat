@@ -1,0 +1,62 @@
+{
+  "grid": {
+    "size": 5,
+    "industrial_positions": [[2, 0], [0, 3], [2, 4], [4, 1]],
+    "start_positions": [[0, 0], [4, 4]],
+    "village_positions": [[1, 0], [3, 4]]
+  },
+  "players": [
+    {
+      "name": "Player A",
+      "color": [1.0, 0.15, 0.15],
+      "manpower": 100,
+      "supplies": 100,
+      "materials": 100
+    },
+    {
+      "name": "Player B",
+      "color": [0.15, 0.35, 1.0],
+      "manpower": 100,
+      "supplies": 100,
+      "materials": 100
+    }
+  ],
+  "economy": {
+    "resource":                   { "mp": -1, "sup": 5, "mat": 0 },
+    "residential_mp_per_level":   [2, 5, 10],
+    "residential_sup":            -10,
+    "residential_mat":            -5,
+    "industry_mp_per_level":      [-2, -3, -5],
+    "industry_sup":               -10,
+    "industry_mat_per_level":     [5, 10, 20],
+    "zero_supply_mp_penalty":     -10,
+    "zero_material_mp_penalty":   -10,
+    "starvation_turns_to_lose":   3,
+    "upgrade_cooldown_turns":     3
+  },
+  "occupation": {
+    "neutral_cost":  10,
+    "enemy_cost":    20
+  },
+  "raze": {
+    "own_cost":           15,
+    "enemy_cost":         25,
+    "resource_turns":     3,
+    "industry_turns":     5,
+    "residential_turns":  5
+  },
+  "upgrade": {
+    "residential_mp_costs":  [15, 30],
+    "industry_sup_costs":    [20, 50],
+    "industry_mp_costs":     [20, 30]
+  },
+  "camera": {
+    "pan_speed":     15.0,
+    "zoom_speed":    3.0,
+    "min_zoom":      8.0,
+    "max_zoom":      60.0,
+    "angle_deg":     50.0,
+    "default_zoom":  28.0,
+    "player_angles": [-135.0, 45.0]
+  }
+}

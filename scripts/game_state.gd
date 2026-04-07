@@ -8,15 +8,16 @@ var has_occupied_this_turn: bool = false
 
 
 func _ready() -> void:
-	var p1 := PlayerData.new()
-	p1.player_name = "Player A"
-	p1.color = Color(1.0, 0.15, 0.15)
-
-	var p2 := PlayerData.new()
-	p2.player_name = "Player B"
-	p2.color = Color(0.15, 0.35, 1.0)
-
-	players = [p1, p2]
+	var pcfg: Array = Config.get_value("players", [])
+	for pd in pcfg:
+		var p := PlayerData.new()
+		p.player_name = pd.get("name", "Player")
+		var c: Array = pd.get("color", [1.0, 1.0, 1.0])
+		p.color = Color(c[0], c[1], c[2])
+		p.manpower  = pd.get("manpower",  100)
+		p.supplies  = pd.get("supplies",  100)
+		p.materials = pd.get("materials", 100)
+		players.append(p)
 
 
 func current_player() -> PlayerData:
