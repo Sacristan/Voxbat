@@ -27,11 +27,11 @@ vertical_alignment = 1
 
 [node name="ResourceBar" type="HBoxContainer" parent="TopBar/TopBarInner"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 6
 
 [node name="ManpowerLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
 layout_mode = 2
-text = "Manpower: 100"
+text = "MP: 100"
 vertical_alignment = 1
 
 [node name="ManpowerDeltaLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
@@ -39,14 +39,32 @@ layout_mode = 2
 text = "(+10)"
 vertical_alignment = 1
 
+[node name="Spacer1" type="Control" parent="TopBar/TopBarInner/ResourceBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(12, 0)
+
 [node name="SuppliesLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
 layout_mode = 2
-text = "Supplies: 100"
+text = "SUP: 100"
 vertical_alignment = 1
+
+[node name="SuppliesDeltaLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
+layout_mode = 2
+text = "(+0)"
+vertical_alignment = 1
+
+[node name="Spacer2" type="Control" parent="TopBar/TopBarInner/ResourceBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(12, 0)
 
 [node name="MaterialsLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
 layout_mode = 2
-text = "Materials: 100"
+text = "MAT: 100"
+vertical_alignment = 1
+
+[node name="MaterialsDeltaLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
+layout_mode = 2
+text = "(+0)"
 vertical_alignment = 1
 
 [node name="GameOverLabel" type="Label" parent="."]
