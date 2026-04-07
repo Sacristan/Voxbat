@@ -22,6 +22,7 @@ func _ready() -> void:
 	get_viewport().physics_object_picking = true
 	_spawn_grid()
 	_place_starting_cells()
+	camera_rig.focus_for_player(GameState.current_player_index, true)
 	camera_rig.fit_to_grid(GRID_SIZE)
 	GameState.turn_changed.connect(_on_turn_changed)
 	hud.end_turn_pressed.connect(_on_end_turn)
@@ -201,6 +202,7 @@ func _on_end_turn() -> void:
 
 
 func _on_turn_changed(_player: PlayerData) -> void:
+	camera_rig.focus_for_player(GameState.current_player_index)
 	_update_hud()
 
 

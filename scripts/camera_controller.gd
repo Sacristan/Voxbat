@@ -5,11 +5,14 @@ const ZOOM_SPEED := 3.0
 const MIN_ZOOM := 8.0
 const MAX_ZOOM := 60.0
 const CAMERA_ANGLE_DEG := 50.0
+# Y rotation per player: northwest for A (-135°), southeast for B (45°)
+const PLAYER_ANGLES := [-135.0, 45.0]
 
 var zoom := 28.0
 var _dragging := false
 var _drag_start_mouse: Vector2
 var _drag_start_pos: Vector3
+var _tween: Tween = null
 
 @onready var camera: Camera3D = $Camera3D
 
@@ -53,6 +56,24 @@ func _unhandled_input(event: InputEvent) -> void:
 			if _dragging:
 				_drag_start_mouse = get_viewport().get_mouse_position()
 				_drag_start_pos = position
+
+
+func focus_for_player(player_index: int, instant: bool = false) -> void:
+	var target_angle: float = PLAYER_ANGLES[player_index]
+	if _tween != null and _tween.is_running():
+		_tween.kill()
+	if instant:
+		position = Vector3.ZERO
+		rotation_degrees.y = target_angle
+		_apply_zoom()
+		return
+	_tween = create_tween()
+	_tween.set_ease(Tween.EASE_IN_OUT)
+	_tween.set_trans(Tween.TRANS_CUBIC)
+	_tween.set_parallel(true)
+	_tween.tween_property(self, "position", Vector3.ZERO, 0.7)
+	_tween.tween_property(self, "rotation_degrees:y", target_angle, 0.7)
+	_tween.chain().tween_callback(_apply_zoom)
 
 
 func fit_to_grid(grid_size: int) -> void:
