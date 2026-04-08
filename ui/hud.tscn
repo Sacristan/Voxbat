@@ -29,12 +29,18 @@ vertical_alignment = 1
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="ManpowerLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
+[node name="ManpowerSection" type="HBoxContainer" parent="TopBar/TopBarInner/ResourceBar"]
+layout_mode = 2
+theme_override_constants/separation = 4
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+
+[node name="ManpowerLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar/ManpowerSection"]
 layout_mode = 2
 text = "MP: 100"
 vertical_alignment = 1
 
-[node name="ManpowerDeltaLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
+[node name="ManpowerDeltaLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar/ManpowerSection"]
 layout_mode = 2
 text = "(+10)"
 vertical_alignment = 1
@@ -43,12 +49,18 @@ vertical_alignment = 1
 layout_mode = 2
 custom_minimum_size = Vector2(12, 0)
 
-[node name="SuppliesLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
+[node name="SuppliesSection" type="HBoxContainer" parent="TopBar/TopBarInner/ResourceBar"]
+layout_mode = 2
+theme_override_constants/separation = 4
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+
+[node name="SuppliesLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar/SuppliesSection"]
 layout_mode = 2
 text = "SUP: 100"
 vertical_alignment = 1
 
-[node name="SuppliesDeltaLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
+[node name="SuppliesDeltaLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar/SuppliesSection"]
 layout_mode = 2
 text = "(+0)"
 vertical_alignment = 1
@@ -57,12 +69,18 @@ vertical_alignment = 1
 layout_mode = 2
 custom_minimum_size = Vector2(12, 0)
 
-[node name="MaterialsLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
+[node name="MaterialsSection" type="HBoxContainer" parent="TopBar/TopBarInner/ResourceBar"]
+layout_mode = 2
+theme_override_constants/separation = 4
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+
+[node name="MaterialsLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar/MaterialsSection"]
 layout_mode = 2
 text = "MAT: 100"
 vertical_alignment = 1
 
-[node name="MaterialsDeltaLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar"]
+[node name="MaterialsDeltaLabel" type="Label" parent="TopBar/TopBarInner/ResourceBar/MaterialsSection"]
 layout_mode = 2
 text = "(+0)"
 vertical_alignment = 1
@@ -80,3 +98,40 @@ visible = false
 text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="ResourceInfoPanel" type="PanelContainer" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 55.0
+offset_right = -10.0
+offset_bottom = 330.0
+visible = false
+
+[node name="InfoMargin" type="MarginContainer" parent="ResourceInfoPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="InfoVBox" type="VBoxContainer" parent="ResourceInfoPanel/InfoMargin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="InfoTitleRow" type="HBoxContainer" parent="ResourceInfoPanel/InfoMargin/InfoVBox"]
+layout_mode = 2
+
+[node name="InfoTitleLabel" type="Label" parent="ResourceInfoPanel/InfoMargin/InfoVBox/InfoTitleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Modifiers"
+
+[node name="InfoCloseButton" type="Button" parent="ResourceInfoPanel/InfoMargin/InfoVBox/InfoTitleRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(24, 24)
+text = "X"
+
+[node name="InfoContentLabel" type="Label" parent="ResourceInfoPanel/InfoMargin/InfoVBox"]
+layout_mode = 2
+text = ""

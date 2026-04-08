@@ -33,6 +33,7 @@ func _ready() -> void:
 	camera_rig.fit_to_grid(GRID_SIZE)
 	GameState.turn_changed.connect(_on_turn_changed)
 	hud.end_turn_pressed.connect(_on_end_turn)
+	hud.resource_info_requested.connect(_on_resource_info_requested)
 	cell_panel.occupy_pressed.connect(_on_occupy_pressed)
 	cell_panel.raze_pressed.connect(_on_raze_pressed)
 	cell_panel.upgrade_pressed.connect(_on_upgrade_pressed)
@@ -392,6 +393,72 @@ func _on_end_turn() -> void:
 func _on_turn_changed(_player: PlayerData) -> void:
 	camera_rig.focus_for_player(GameState.current_player_index)
 	_update_hud()
+
+
+func _on_resource_info_requested(which: String) -> void:
+	var titles := {"mp": "Manpower / turn", "sup": "Supplies / turn", "mat": "Materials / turn"}
+	hud.show_resource_info(titles.get(which, which), _compute_resource_breakdown(which))
+
+
+func _compute_resource_breakdown(which: String) -> String:
+	var player_idx := GameState.current_player_index
+	var connected := _get_connected_positions(player_idx)
+	var player := GameState.players[player_idx]
+
+	var groups: Dictionary = {}   # label -> {total, count}
+	var cell_sup_total := 0
+	var cell_mat_total := 0
+
+	for z in GRID_SIZE:
+		for x in GRID_SIZE:
+			var cell: Cell = grid[z][x]
+			if cell.owner_index != player_idx or not connected.has(Vector2i(x, z)):
+				continue
+			cell_sup_total += _cell_sup(cell)
+			cell_mat_total += _cell_mat(cell)
+			var amount: int
+			match which:
+				"mp":  amount = _cell_mp(cell)
+				"sup": amount = _cell_sup(cell)
+				"mat": amount = _cell_mat(cell)
+				_: amount = 0
+			var key := cell.level_name()
+			if cell.upgrade_cooldown > 0:
+				key += " (upgrading)"
+			if not groups.has(key):
+				groups[key] = {"total": 0, "count": 0}
+			groups[key]["total"] += amount
+			groups[key]["count"] += 1
+
+	var lines: Array = []
+	var running_total := 0
+	var keys := groups.keys()
+	keys.sort()
+	for key in keys:
+		var g: Dictionary = groups[key]
+		var amt: int = g["total"]
+		var cnt: int = g["count"]
+		running_total += amt
+		var amt_str := ("+" if amt >= 0 else "") + str(amt) if amt != 0 else "—"
+		lines.append("  %s ×%d:  %s" % [key, cnt, amt_str])
+
+	if which == "mp":
+		var sup_pen: int = Config.get_value("economy.zero_supply_mp_penalty", -10)
+		var mat_pen: int = Config.get_value("economy.zero_material_mp_penalty", -10)
+		if player.supplies + cell_sup_total <= 0:
+			running_total += sup_pen
+			lines.append("  Zero supplies:   %d" % sup_pen)
+		if player.materials + cell_mat_total <= 0:
+			running_total += mat_pen
+			lines.append("  Zero materials:  %d" % mat_pen)
+
+	if lines.is_empty():
+		return "(no connected cells)"
+
+	var plus := "+" if running_total >= 0 else ""
+	lines.append("─────────────────────")
+	lines.append("  Net:  %s%d" % [plus, running_total])
+	return "\n".join(lines)
 
 
 func _update_hud() -> void:
