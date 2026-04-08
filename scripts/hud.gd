@@ -54,6 +54,10 @@ func show_resource_info(title: String, content: String) -> void:
 	resource_info_panel.visible = true
 
 
+func close_all_panels() -> void:
+	resource_info_panel.visible = false
+
+
 func _set_delta(label: Label, delta: int) -> void:
 	label.text = "(+%d)" % delta if delta >= 0 else "(%d)" % delta
 	if delta < 0:

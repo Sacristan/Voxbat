@@ -3,7 +3,8 @@
     "size": 5,
     "industrial_positions": [[2, 0], [0, 3], [2, 4], [4, 1]],
     "start_positions": [[0, 0], [4, 4]],
-    "village_positions": [[1, 0], [3, 4]]
+    "village_positions": [[0, 2], [4, 2]],
+    "start_cell_level": 2
   },
   "players": [
     {

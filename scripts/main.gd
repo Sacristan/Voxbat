@@ -54,7 +54,7 @@ func _spawn_grid() -> void:
 			var pos := Vector2i(x, z)
 			if pos in _start_positions:
 				cell.cell_type = Cell.CellType.RESIDENTIAL
-				cell.cell_level = 3  # metropolis
+				cell.cell_level = Config.get_value("grid.start_cell_level")
 			elif pos in _industrial_positions:
 				cell.cell_type = Cell.CellType.INDUSTRY
 				cell.cell_level = 1  # workshop
@@ -321,7 +321,7 @@ func _apply_turn_effects(player_idx: int) -> String:
 	return ""
 
 
-func _tick_timers() -> void:
+func _tick_timers(player_idx: int) -> void:
 	for z in GRID_SIZE:
 		for x in GRID_SIZE:
 			var cell: Cell = grid[z][x]
@@ -329,7 +329,8 @@ func _tick_timers() -> void:
 				cell.raze_turns_remaining -= 1
 				if cell.raze_turns_remaining == 0:
 					cell.restore_from_raze()
-			if cell.upgrade_cooldown > 0:
+			# Upgrade cooldown counts only on the owning player's turns
+			if cell.upgrade_cooldown > 0 and cell.owner_index == player_idx:
 				cell.upgrade_cooldown -= 1
 
 
@@ -413,16 +414,17 @@ func _on_panel_closed() -> void:
 func _on_end_turn() -> void:
 	if _is_game_over:
 		return
-	_tick_timers()
+	_tick_timers(GameState.current_player_index)
 	var winner := _apply_turn_effects(GameState.current_player_index)
-	if winner != "":
-		_is_game_over = true
-		hud.show_game_over(winner)
-		return
 	if _selected_cell != null:
 		_selected_cell.deselect()
 		_selected_cell = null
 	cell_panel.hide()
+	hud.close_all_panels()
+	if winner != "":
+		_is_game_over = true
+		hud.show_game_over(winner)
+		return
 	GameState.end_turn()
 
 
