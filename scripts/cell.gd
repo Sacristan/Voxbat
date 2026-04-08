@@ -29,8 +29,7 @@ var _fill_mat: StandardMaterial3D
 var _outline_mat: StandardMaterial3D
 var _level_cubes: Array = []
 
-static var _shared_cube_mesh: BoxMesh = null
-static var _shared_cube_mat: StandardMaterial3D = null
+static var _slice_meshes: Array = []
 
 
 func _ready() -> void:
@@ -52,22 +51,31 @@ func _ready() -> void:
 
 
 func _create_level_cubes() -> void:
-	if _shared_cube_mesh == null:
-		_shared_cube_mesh = BoxMesh.new()
-		_shared_cube_mesh.size = Vector3(0.18, 0.18, 0.18)
-		_shared_cube_mat = StandardMaterial3D.new()
-		_shared_cube_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		_shared_cube_mat.albedo_color = Color(0.9, 0.9, 0.9)
+	if _slice_meshes.is_empty():
+		# Decreasing XZ size bottom→top: 80%, 60%, 40% of cell (0.9)
+		for s in [0.72, 0.54, 0.36]:
+			var m := BoxMesh.new()
+			m.size = Vector3(s, 0.10, s)
+			_slice_meshes.append(m)
 
+	# Per-instance materials so color matches cell type; half-transparent
+	var base: Color = TYPE_COLORS[cell_type]
+	var slice_color := Color(base.r, base.g, base.b, 0.5)
+
+	# Stacked above cell top (y=0.45), 0.10 tall slices with 0.06 gap
 	var offsets := [
-		Vector3(-0.25, 0.54, 0.0),
-		Vector3( 0.0,  0.54, 0.0),
-		Vector3( 0.25, 0.54, 0.0),
+		Vector3(0.0, 0.50, 0.0),
+		Vector3(0.0, 0.66, 0.0),
+		Vector3(0.0, 0.82, 0.0),
 	]
 	for i in 3:
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.albedo_color = slice_color
 		var mi := MeshInstance3D.new()
-		mi.mesh = _shared_cube_mesh
-		mi.material_override = _shared_cube_mat
+		mi.mesh = _slice_meshes[i]
+		mi.material_override = mat
 		mi.position = offsets[i]
 		mi.visible = false
 		add_child(mi)
