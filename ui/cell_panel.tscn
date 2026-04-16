@@ -58,3 +58,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 visible = false
 text = "UPGRADE"
+
+[node name="BuildResidentialButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+visible = false
+text = "BUILD RESIDENTIAL"
+
+[node name="BuildIndustrialButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+visible = false
+text = "BUILD INDUSTRIAL"

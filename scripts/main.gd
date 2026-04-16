@@ -40,6 +40,8 @@ func _ready() -> void:
 	cell_panel.occupy_pressed.connect(_on_occupy_pressed)
 	cell_panel.raze_pressed.connect(_on_raze_pressed)
 	cell_panel.upgrade_pressed.connect(_on_upgrade_pressed)
+	cell_panel.build_residential_pressed.connect(_on_build_residential_pressed)
+	cell_panel.build_industrial_pressed.connect(_on_build_industrial_pressed)
 	cell_panel.panel_closed.connect(_on_panel_closed)
 	_update_hud()
 
@@ -230,6 +232,37 @@ func _upgrade_cost_text(cell: Cell) -> String:
 	return "%d MP" % cost["mp"]
 
 
+func _convert_cost(to_type: Cell.CellType) -> Dictionary:
+	if to_type == Cell.CellType.RESIDENTIAL:
+		return {
+			"mp":  Config.get_value("convert.to_residential_mp_cost"),
+			"sup": Config.get_value("convert.to_residential_sup_cost")
+		}
+	return {
+		"mp":  Config.get_value("convert.to_industrial_mp_cost"),
+		"sup": Config.get_value("convert.to_industrial_sup_cost")
+	}
+
+
+func _convert_cost_text(to_type: Cell.CellType) -> String:
+	var cost := _convert_cost(to_type)
+	return "%d SUP / %d MP" % [cost["sup"], cost["mp"]]
+
+
+func _can_convert(cell: Cell, to_type: Cell.CellType) -> bool:
+	if _is_game_over or GameState.has_occupied_this_turn:
+		return false
+	if cell.cell_type != Cell.CellType.RESOURCE:
+		return false
+	if cell.owner_index != GameState.current_player_index:
+		return false
+	if cell.raze_turns_remaining > 0:
+		return false
+	var cost := _convert_cost(to_type)
+	var player := GameState.current_player()
+	return player.manpower >= cost["mp"] and player.supplies >= cost["sup"]
+
+
 # --- Can-do checks ---
 
 func _can_occupy(cell: Cell) -> bool:
@@ -354,11 +387,18 @@ func _on_cell_clicked(cell: Cell) -> void:
 		and cell.raze_turns_remaining == 0
 		and cell.owner_index == GameState.current_player_index
 	)
+	var show_build := (
+		cell.cell_type == Cell.CellType.RESOURCE
+		and cell.raze_turns_remaining == 0
+		and cell.owner_index == GameState.current_player_index
+	)
 	cell_panel.show_for_cell(
 		cell,
 		_can_occupy(cell), _occupation_cost(cell),
 		_can_raze(cell), _raze_cost(cell), show_raze,
-		_can_upgrade(cell), _upgrade_cost_text(cell), show_upgrade
+		_can_upgrade(cell), _upgrade_cost_text(cell), show_upgrade,
+		_can_convert(cell, Cell.CellType.RESIDENTIAL), _convert_cost_text(Cell.CellType.RESIDENTIAL), show_build,
+		_can_convert(cell, Cell.CellType.INDUSTRY), _convert_cost_text(Cell.CellType.INDUSTRY)
 	)
 
 
@@ -406,6 +446,28 @@ func _on_upgrade_pressed(cell: Cell) -> void:
 	player.manpower -= cost["mp"]
 	player.supplies -= cost["sup"]
 	cell.upgrade()
+	_selected_cell = null
+	GameState.has_occupied_this_turn = true
+	_update_hud()
+
+
+func _on_build_residential_pressed(cell: Cell) -> void:
+	var cost := _convert_cost(Cell.CellType.RESIDENTIAL)
+	var player := GameState.current_player()
+	player.manpower -= cost["mp"]
+	player.supplies -= cost["sup"]
+	cell.convert_to(Cell.CellType.RESIDENTIAL)
+	_selected_cell = null
+	GameState.has_occupied_this_turn = true
+	_update_hud()
+
+
+func _on_build_industrial_pressed(cell: Cell) -> void:
+	var cost := _convert_cost(Cell.CellType.INDUSTRY)
+	var player := GameState.current_player()
+	player.manpower -= cost["mp"]
+	player.supplies -= cost["sup"]
+	cell.convert_to(Cell.CellType.INDUSTRY)
 	_selected_cell = null
 	GameState.has_occupied_this_turn = true
 	_update_hud()

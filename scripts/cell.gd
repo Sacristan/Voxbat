@@ -192,6 +192,17 @@ func upgrade() -> void:
 	_update_level_visual()
 
 
+func convert_to(new_type: CellType) -> void:
+	cell_type = new_type
+	cell_level = 1
+	upgrade_cooldown = Config.get_value("economy.upgrade_cooldown_turns")
+	_fill_mat.set_shader_parameter("albedo_color", TYPE_COLORS[cell_type])
+	var slice_color := Color(TYPE_COLORS[cell_type].r, TYPE_COLORS[cell_type].g, TYPE_COLORS[cell_type].b, 0.5)
+	for cube in _level_cubes:
+		cube.material_override.albedo_color = slice_color
+	_update_level_visual()
+
+
 func raze() -> void:
 	upgrade_cooldown = 0
 	owner_index = -1
