@@ -22,9 +22,11 @@ const TYPE_COLORS: Dictionary = {
 	2: Color(0.05, 0.82, 0.95),  # RESIDENTIAL - bright cyan
 }
 
-const SELECTED_COLOR := Color(1.0, 0.9, 0.0)
-const RAZED_COLOR    := Color(0.22, 0.20, 0.18)
-const OUTLINE_GROW   := 0.08
+const SELECTED_COLOR  := Color(1.0, 0.9, 0.0)
+const RAZED_COLOR     := Color(0.22, 0.20, 0.18)
+const OUTLINE_GROW    := 0.08
+const BASE_OUTLINE_GROW  := 0.0525
+const BASE_OUTLINE_COLOR := Color(0.06, 0.05, 0.08)
 
 const _CELL_SHADER := preload("res://shaders/cell.gdshader")
 
@@ -52,8 +54,8 @@ func _ready() -> void:
 	_outline_mat.cull_mode = BaseMaterial3D.CULL_FRONT
 	_outline_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_outline_mat.grow = true
-	_outline_mat.grow_amount = 0.0
-	_outline_mat.albedo_color = Color.WHITE
+	_outline_mat.grow_amount = BASE_OUTLINE_GROW
+	_outline_mat.albedo_color = BASE_OUTLINE_COLOR
 
 	_fill_mat.next_pass = _outline_mat
 	mesh_instance.set_surface_override_material(0, _fill_mat)
@@ -208,7 +210,8 @@ func select() -> void:
 
 func deselect() -> void:
 	if owner_index == -1:
-		_outline_mat.grow_amount = 0.0
+		_outline_mat.grow_amount = BASE_OUTLINE_GROW
+		_outline_mat.albedo_color = BASE_OUTLINE_COLOR
 	else:
 		_outline_mat.grow_amount = OUTLINE_GROW
 		_outline_mat.albedo_color = GameState.players[owner_index].color
@@ -253,7 +256,8 @@ func raze() -> void:
 		CellType.INDUSTRY:    raze_turns_remaining = Config.get_value("raze.industry_rubble_turns")
 		CellType.RESIDENTIAL: raze_turns_remaining = Config.get_value("raze.residential_rubble_turns")
 	_fill_mat.set_shader_parameter("albedo_color", RAZED_COLOR)
-	_outline_mat.grow_amount = 0.0
+	_outline_mat.grow_amount = BASE_OUTLINE_GROW
+	_outline_mat.albedo_color = BASE_OUTLINE_COLOR
 	_update_level_visual()
 
 
