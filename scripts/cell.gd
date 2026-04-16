@@ -17,9 +17,9 @@ var upgrade_cooldown: int = 0
 @onready var mesh_instance: MeshInstance3D = $MeshInstance3D
 
 const TYPE_COLORS: Dictionary = {
-	0: Color(0.15, 0.55, 0.15),  # RESOURCE - green
-	1: Color(0.45, 0.28, 0.10),  # INDUSTRY - brown
-	2: Color(0.00, 0.72, 0.82),  # RESIDENTIAL - cyan
+	0: Color(0.10, 0.82, 0.22),  # RESOURCE - vivid green
+	1: Color(0.78, 0.45, 0.10),  # INDUSTRY - warm orange-brown
+	2: Color(0.05, 0.82, 0.95),  # RESIDENTIAL - bright cyan
 }
 
 const SELECTED_COLOR := Color(1.0, 0.9, 0.0)
