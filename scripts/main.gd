@@ -586,17 +586,16 @@ func _update_shortage_indicators() -> void:
 					continue
 				if cell.raze_turns_remaining > 0 or cell.upgrade_cooldown > 0:
 					continue
-				var mp_need := -_cell_mp(cell)
-				var sup_need := -_cell_sup(cell)
-				var mat_need := -_cell_mat(cell)
-				var shortage := (
-					(mp_need > 0 and player.manpower < mp_need)
-					or (sup_need > 0 and player.supplies < sup_need)
-					or (mat_need > 0 and player.materials < mat_need)
-				)
-				if shortage:
-					var label := "Starving" if cell.cell_type == Cell.CellType.RESIDENTIAL else "Shortage"
-					cell.set_shortage(true, label)
+				var parts: Array[String] = []
+				var res: Array[String] = []
+				if -_cell_mp(cell) > 0 and player.manpower <= 0:
+					res.append("MP")
+				if -_cell_sup(cell) > 0 and player.supplies <= 0:
+					res.append("SUP")
+				if -_cell_mat(cell) > 0 and player.materials <= 0:
+					res.append("MAT")
+				if not res.is_empty():
+					cell.set_shortage(true, ", ".join(res) + " Shortage")
 
 
 func _update_hud() -> void:
