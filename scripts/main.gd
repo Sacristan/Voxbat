@@ -2,8 +2,12 @@ extends Node3D
 
 const CellScene := preload("res://scenes/cell.tscn")
 
-# Flat-top hex grid constants (odd-q offset)
 const HEX_COL_STEP := sqrt(3.0) / 2.0  # x-distance between column centers ≈ 0.866
+
+const CUBE_DIRECTIONS := [
+	Vector3i(1, 0, -1), Vector3i(1, -1, 0), Vector3i(0, -1, 1),
+	Vector3i(-1, 0, 1), Vector3i(-1, 1, 0), Vector3i(0, 1, -1),
+]
 
 var GRID_SIZE: int = 5
 var _start_positions: Array = []
@@ -81,13 +85,23 @@ func _place_starting_cells() -> void:
 		grid[sp.y][sp.x].claim(GameState.players[i])
 
 
+func _offset_to_cube(gx: int, gz: int) -> Vector3i:
+	var q := gx
+	var r := gz - (gx - (gx & 1)) / 2
+	return Vector3i(q, r, -q - r)
+
+
+func _cube_to_offset(q: int, r: int) -> Vector2i:
+	return Vector2i(q, r + (q - (q & 1)) / 2)
+
+
 func _hex_neighbors(gx: int, gz: int) -> Array:
-	if gx % 2 == 0:
-		return [Vector2i(gx+1,gz), Vector2i(gx+1,gz-1), Vector2i(gx,gz-1),
-				Vector2i(gx-1,gz-1), Vector2i(gx-1,gz), Vector2i(gx,gz+1)]
-	else:
-		return [Vector2i(gx+1,gz+1), Vector2i(gx+1,gz), Vector2i(gx,gz-1),
-				Vector2i(gx-1,gz), Vector2i(gx-1,gz+1), Vector2i(gx,gz+1)]
+	var cube := _offset_to_cube(gx, gz)
+	var result: Array = []
+	for d: Vector3i in CUBE_DIRECTIONS:
+		var n: Vector3i = cube + d
+		result.append(_cube_to_offset(n.x, n.y))
+	return result
 
 
 # Returns positions reachable from the player's starting base via owned cells.
