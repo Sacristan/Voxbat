@@ -228,10 +228,14 @@ func _occupation_cost(cell: Cell) -> int:
 			return Config.get_value("occupation.resource_cell_neutral_cost")
 
 
+func _raze_effective_level(cell: Cell) -> int:
+	return cell.cell_level - 1 if cell.upgrade_cooldown > 0 and cell.cell_level > 1 else cell.cell_level
+
 func _raze_cost(cell: Cell) -> int:
 	if cell.owner_index == GameState.current_player_index:
 		return Config.get_value("raze.self_occupied_mp_cost")
 	var is_enemy := cell.owner_index != -1
+	var level := _raze_effective_level(cell)
 	match cell.cell_type:
 		Cell.CellType.RESOURCE:
 			if is_enemy:
@@ -240,27 +244,28 @@ func _raze_cost(cell: Cell) -> int:
 		Cell.CellType.INDUSTRY:
 			var key := "raze.industry_cell_enemy_mp_per_level" if is_enemy else "raze.industry_cell_neutral_mp_per_level"
 			var costs: Array = Config.get_value(key)
-			return costs[cell.cell_level - 1]
+			return costs[level - 1]
 		_:  # RESIDENTIAL
 			var key := "raze.residential_cell_enemy_mp_per_level" if is_enemy else "raze.residential_cell_neutral_mp_per_level"
 			var costs: Array = Config.get_value(key)
-			return costs[cell.cell_level - 1]
+			return costs[level - 1]
 
 
 func _raze_yield_text(cell: Cell) -> String:
 	var yield_turns: int = Config.get_value("raze.resource_yield_turns")
+	var level := _raze_effective_level(cell)
 	match cell.cell_type:
 		Cell.CellType.RESOURCE:
 			var sup: int = int(Config.get_value("economy.resource_cell_sup")) * yield_turns
 			return "+%d SUP" % sup
 		Cell.CellType.INDUSTRY:
 			var mat_vals: Array = Config.get_value("economy.industry_cell_mat_per_level")
-			var mat: int = int(mat_vals[cell.cell_level - 1]) * yield_turns
+			var mat: int = int(mat_vals[level - 1]) * yield_turns
 			return "+%d MAT" % mat
 		_:  # RESIDENTIAL
 			var mp_vals: Array = Config.get_value("economy.residential_cell_mp_per_level")
 			var pct: int = 100 if cell.owner_index == GameState.current_player_index else Config.get_value("raze.residential_mp_refund_percent")
-			var mp: int = int(mp_vals[cell.cell_level - 1] * pct / 100.0)
+			var mp: int = int(mp_vals[level - 1] * pct / 100.0)
 			return "+%d MP" % mp
 
 
@@ -491,16 +496,17 @@ func _on_raze_pressed(cell: Cell) -> void:
 	if not GameState.god_mode:
 		player.manpower -= _raze_cost(cell)
 	var yield_turns: int = Config.get_value("raze.resource_yield_turns")
+	var level := _raze_effective_level(cell)
 	match cell.cell_type:
 		Cell.CellType.RESOURCE:
 			player.supplies += int(Config.get_value("economy.resource_cell_sup")) * yield_turns
 		Cell.CellType.INDUSTRY:
 			var mat_vals: Array = Config.get_value("economy.industry_cell_mat_per_level")
-			player.materials += int(mat_vals[cell.cell_level - 1]) * yield_turns
+			player.materials += int(mat_vals[level - 1]) * yield_turns
 		Cell.CellType.RESIDENTIAL:
 			var mp_vals: Array = Config.get_value("economy.residential_cell_mp_per_level")
 			var pct: int = 100 if cell.owner_index == GameState.current_player_index else Config.get_value("raze.residential_mp_refund_percent")
-			player.manpower += int(mp_vals[cell.cell_level - 1] * pct / 100.0)
+			player.manpower += int(mp_vals[level - 1] * pct / 100.0)
 	cell.raze_player_index = GameState.current_player_index
 	cell.raze()
 	_selected_cell = null
