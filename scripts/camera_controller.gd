@@ -38,7 +38,7 @@ func _process(delta: float) -> void:
 		pan.z += 1.0
 
 	if pan != Vector3.ZERO:
-		_target_position += pan.normalized() * PAN_SPEED * delta
+		_target_position += (transform.basis * pan.normalized()) * PAN_SPEED * delta
 
 	var tween_active := _tween != null and _tween.is_running()
 
