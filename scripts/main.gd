@@ -21,6 +21,7 @@ const SHOW_REACHABLE_HIGHLIGHTS := false
 @onready var camera_rig = $CameraRig
 @onready var hud = $HUD
 @onready var cell_panel = $CellPanel
+@onready var game_net = $GameNet
 
 
 func _ready() -> void:
@@ -38,27 +39,14 @@ func _ready() -> void:
 	camera_rig.focus_for_player(GameState.my_player_index(), true)
 	camera_rig.fit_to_grid(GRID_SIZE)
 	GameState.turn_changed.connect(_on_turn_changed)
-	hud.end_turn_pressed.connect(_on_end_turn)
+	hud.end_turn_pressed.connect(game_net.handle_end_turn)
 	hud.resource_info_requested.connect(_on_resource_info_requested)
-	cell_panel.occupy_pressed.connect(func(cell: Cell) -> void:
-		if GameState.is_multiplayer: _mp_request("occupy", cell.grid_x, cell.grid_z)
-		else: _on_occupy_pressed(cell))
-	cell_panel.raze_pressed.connect(func(cell: Cell) -> void:
-		if GameState.is_multiplayer: _mp_request("raze", cell.grid_x, cell.grid_z)
-		else: _on_raze_pressed(cell))
-	cell_panel.upgrade_pressed.connect(func(cell: Cell) -> void:
-		if GameState.is_multiplayer: _mp_request("upgrade", cell.grid_x, cell.grid_z)
-		else: _on_upgrade_pressed(cell))
-	cell_panel.build_residential_pressed.connect(func(cell: Cell) -> void:
-		if GameState.is_multiplayer: _mp_request("build_residential", cell.grid_x, cell.grid_z)
-		else: _on_build_residential_pressed(cell))
-	cell_panel.build_industrial_pressed.connect(func(cell: Cell) -> void:
-		if GameState.is_multiplayer: _mp_request("build_industrial", cell.grid_x, cell.grid_z)
-		else: _on_build_industrial_pressed(cell))
+	cell_panel.occupy_pressed.connect(func(cell: Cell) -> void: game_net.handle_action("occupy", cell))
+	cell_panel.raze_pressed.connect(func(cell: Cell) -> void: game_net.handle_action("raze", cell))
+	cell_panel.upgrade_pressed.connect(func(cell: Cell) -> void: game_net.handle_action("upgrade", cell))
+	cell_panel.build_residential_pressed.connect(func(cell: Cell) -> void: game_net.handle_action("build_residential", cell))
+	cell_panel.build_industrial_pressed.connect(func(cell: Cell) -> void: game_net.handle_action("build_industrial", cell))
 	cell_panel.panel_closed.connect(_on_panel_closed)
-	if GameState.is_multiplayer:
-		set_multiplayer_authority(1)
-		multiplayer.peer_disconnected.connect(_on_mp_peer_disconnected)
 	ConsoleController.register_command("god", _cmd_god, "Toggle god mode (resources not consumed)")
 	_update_hud()
 	_refresh_reachable_highlights()
@@ -458,7 +446,7 @@ func _tick_timers(player_idx: int) -> void:
 # --- Input handlers ---
 
 func _on_cell_clicked(cell: Cell) -> void:
-	if GameState.is_multiplayer and GameState.current_player_index != GameState.my_player_index():
+	if game_net.is_input_blocked():
 		return
 	if _selected_cell != null and _selected_cell != cell:
 		_selected_cell.deselect()
@@ -572,18 +560,6 @@ func _on_panel_closed() -> void:
 		_selected_cell = null
 
 
-func _on_end_turn() -> void:
-	if GameState.is_multiplayer:
-		if GameState.current_player_index != GameState.my_player_index():
-			return
-		if GameState.is_host:
-			_apply_end_turn_sync.rpc()
-		else:
-			_send_action_to_host.rpc_id(1, "end_turn", -1, -1)
-		return
-	_do_end_turn()
-
-
 func _do_end_turn() -> void:
 	if _is_game_over:
 		return
@@ -602,10 +578,7 @@ func _do_end_turn() -> void:
 
 
 func _on_turn_changed(_player: PlayerData) -> void:
-	if not GameState.is_multiplayer:
-		camera_rig.focus_for_player(GameState.current_player_index)
-	if GameState.is_multiplayer:
-		hud.set_end_turn_interactable(GameState.current_player_index == GameState.my_player_index())
+	game_net.on_turn_changed()
 	_update_hud()
 	_refresh_reachable_highlights()
 
@@ -715,72 +688,3 @@ func _update_hud() -> void:
 	hud.update_turn(GameState.current_player().player_name)
 	hud.update_resources(GameState.current_player(), deltas["mp"], deltas["sup"], deltas["mat"])
 	_update_shortage_indicators()
-
-
-# --- Multiplayer RPC layer ---
-
-func _mp_request(action: String, gx: int, gz: int) -> void:
-	if GameState.is_host:
-		_mp_dispatch(action, gx, gz)
-	else:
-		_send_action_to_host.rpc_id(1, action, gx, gz)
-
-
-@rpc("any_peer", "reliable")
-func _send_action_to_host(action: String, gx: int, gz: int) -> void:
-	if not GameState.is_host:
-		return
-	_mp_dispatch(action, gx, gz)
-
-
-func _mp_dispatch(action: String, gx: int, gz: int) -> void:
-	var cell: Cell = grid[gz][gx] if gx >= 0 else null
-	match action:
-		"occupy":
-			if _can_occupy(cell): _apply_occupy_sync.rpc(gx, gz)
-		"raze":
-			if _can_raze(cell): _apply_raze_sync.rpc(gx, gz)
-		"upgrade":
-			if _can_upgrade(cell): _apply_upgrade_sync.rpc(gx, gz)
-		"build_residential":
-			if _can_convert(cell, Cell.CellType.RESIDENTIAL): _apply_build_residential_sync.rpc(gx, gz)
-		"build_industrial":
-			if _can_convert(cell, Cell.CellType.INDUSTRY): _apply_build_industrial_sync.rpc(gx, gz)
-		"end_turn":
-			_apply_end_turn_sync.rpc()
-
-
-@rpc("authority", "call_local", "reliable")
-func _apply_occupy_sync(gx: int, gz: int) -> void:
-	_on_occupy_pressed(grid[gz][gx])
-
-
-@rpc("authority", "call_local", "reliable")
-func _apply_raze_sync(gx: int, gz: int) -> void:
-	_on_raze_pressed(grid[gz][gx])
-
-
-@rpc("authority", "call_local", "reliable")
-func _apply_upgrade_sync(gx: int, gz: int) -> void:
-	_on_upgrade_pressed(grid[gz][gx])
-
-
-@rpc("authority", "call_local", "reliable")
-func _apply_build_residential_sync(gx: int, gz: int) -> void:
-	_on_build_residential_pressed(grid[gz][gx])
-
-
-@rpc("authority", "call_local", "reliable")
-func _apply_build_industrial_sync(gx: int, gz: int) -> void:
-	_on_build_industrial_pressed(grid[gz][gx])
-
-
-@rpc("authority", "call_local", "reliable")
-func _apply_end_turn_sync() -> void:
-	_do_end_turn()
-
-
-func _on_mp_peer_disconnected(_id: int) -> void:
-	if not _is_game_over:
-		_is_game_over = true
-		hud.show_game_over("Opponent disconnected")
