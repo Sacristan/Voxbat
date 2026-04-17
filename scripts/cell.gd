@@ -43,6 +43,7 @@ var _shortage_tween: Tween
 var _is_shortage: bool = false
 
 var _upgrading_label: Label3D
+var _upgrading_turns_label: Label3D
 var _upgrading_cube_tween: Tween
 
 static var _slice_meshes: Array = []
@@ -187,9 +188,25 @@ func _create_upgrading_indicator() -> void:
 	_upgrading_label.visible = false
 	add_child(_upgrading_label)
 
+	_upgrading_turns_label = Label3D.new()
+	_upgrading_turns_label.font_size = 24
+	_upgrading_turns_label.modulate = Color(0.0, 1.0, 1.0)
+	_upgrading_turns_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_upgrading_turns_label.no_depth_test = true
+	_upgrading_turns_label.position = Vector3(0.0, 1.3, 0.0)
+	_upgrading_turns_label.visible = false
+	add_child(_upgrading_turns_label)
+
+
+func refresh_upgrading_turns() -> void:
+	var total: int = Config.get_value("economy.upgrade_cooldown_turns")
+	_upgrading_turns_label.text = "%d/%d" % [upgrade_cooldown, total]
 
 func set_upgrading(active: bool) -> void:
 	_upgrading_label.visible = active
+	_upgrading_turns_label.visible = active
+	if active:
+		refresh_upgrading_turns()
 	if _upgrading_cube_tween != null:
 		_upgrading_cube_tween.kill()
 		_upgrading_cube_tween = null

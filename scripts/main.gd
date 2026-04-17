@@ -433,6 +433,8 @@ func _tick_timers(player_idx: int) -> void:
 				cell.upgrade_cooldown -= 1
 				if cell.upgrade_cooldown == 0:
 					cell.set_upgrading(false)
+				else:
+					cell.refresh_upgrading_turns()
 
 
 # --- Input handlers ---
