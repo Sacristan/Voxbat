@@ -2,6 +2,7 @@ class_name AiPlayer
 extends Node
 
 const THINK_DELAY := 0.6
+const SCORE_JITTER := 8  # random noise added to each candidate's score
 
 var _main
 
@@ -31,19 +32,26 @@ func _try_action() -> void:
 		_main.game_net.handle_action("build_residential", build_cell)
 
 
-func _best_occupiable_cell() -> Cell:
+func _pick_best(candidates: Array) -> Cell:
+	candidates.shuffle()
 	var best: Cell = null
 	var best_score: int = -1
+	for entry in candidates:
+		var score: int = entry[0] + randi_range(0, SCORE_JITTER)
+		if score > best_score:
+			best_score = score
+			best = entry[1]
+	return best
+
+
+func _best_occupiable_cell() -> Cell:
+	var candidates: Array = []
 	for row in _main.grid:
 		for c in row:
 			var cell: Cell = c as Cell
-			if not _main._can_occupy(cell):
-				continue
-			var score: int = _occupy_score(cell)
-			if score > best_score:
-				best_score = score
-				best = cell
-	return best
+			if _main._can_occupy(cell):
+				candidates.append([_occupy_score(cell), cell])
+	return _pick_best(candidates)
 
 
 func _occupy_score(cell: Cell) -> int:
@@ -58,8 +66,7 @@ func _occupy_score(cell: Cell) -> int:
 
 
 func _best_upgradeable_cell() -> Cell:
-	var best: Cell = null
-	var best_score: int = -1
+	var candidates: Array = []
 	for row in _main.grid:
 		for c in row:
 			var cell: Cell = c as Cell
@@ -68,16 +75,15 @@ func _best_upgradeable_cell() -> Cell:
 			var score: int = cell.cell_level * 10
 			if cell.cell_type == Cell.CellType.RESIDENTIAL:
 				score += 5
-			if score > best_score:
-				best_score = score
-				best = cell
-	return best
+			candidates.append([score, cell])
+	return _pick_best(candidates)
 
 
 func _best_build_cell() -> Cell:
+	var candidates: Array = []
 	for row in _main.grid:
 		for c in row:
 			var cell: Cell = c as Cell
 			if _main._can_convert(cell, Cell.CellType.RESIDENTIAL):
-				return cell
-	return null
+				candidates.append([0, cell])
+	return _pick_best(candidates)
