@@ -154,7 +154,7 @@ func _collect_occupy(candidates: Array, p: Dictionary, needs: Dictionary, player
 func _occupy_score(cell: Cell, p: Dictionary, ind_bonus: float, needs: Dictionary) -> float:
 	var is_enemy: bool = cell.owner_index != -1
 	var need: float = _cell_need(cell, needs)
-	var contest_factor: float = 1.0 / (1.0 + cell.contested_turns * 0.4)
+	var contest_factor: float = 0.0 if cell.contested_turns >= 3 else 1.0 / (1.0 + cell.contested_turns * 1.5)
 	if is_enemy and _main._start_positions[cell.owner_index] == Vector2i(cell.grid_x, cell.grid_z):
 		return S_OCCUPY_ENEMY_BASE * contest_factor
 	if is_enemy:
