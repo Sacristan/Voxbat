@@ -466,8 +466,6 @@ func _tick_timers(player_idx: int) -> void:
 				cell.upgrade_cooldown -= 1
 				if cell.upgrade_cooldown == 0:
 					cell.set_upgrading(false)
-				else:
-					cell.refresh_upgrading_turns()
 			# Contested heat decays one step per full round (tick on player 0's turn)
 			if player_idx == 0 and cell.contested_turns > 0:
 				cell.contested_turns -= 1
@@ -621,8 +619,18 @@ func _on_turn_changed(_player: PlayerData) -> void:
 	game_net.on_turn_changed()
 	_update_hud()
 	_refresh_reachable_highlights()
+	_refresh_upgrade_displays()
 	if GameState.ai_flags[GameState.current_player_index]:
 		_schedule_ai_turn()
+
+
+func _refresh_upgrade_displays() -> void:
+	var idx: int = GameState.current_player_index
+	for z in GRID_SIZE:
+		for x in GRID_SIZE:
+			var cell: Cell = grid[z][x]
+			if cell.upgrade_cooldown > 0 and cell.owner_index == idx:
+				cell.refresh_upgrading_turns()
 
 
 func _on_resource_info_requested(which: String) -> void:
