@@ -28,10 +28,10 @@ const OWN_RAZE_THRESHOLD  := 20.0
 const SUSTAIN_PENALTY_RATE := 0.15
 
 const PERSONALITIES: Dictionary = {
-	"expansionist": { "occupy_neutral": 1.2, "occupy_enemy": 1.0, "upgrade": 0.4, "build": 0.6, "industry_bonus": 1.0 },
-	"builder":      { "occupy_neutral": 0.5, "occupy_enemy": 0.7, "upgrade": 2.0, "build": 1.8, "industry_bonus": 1.0 },
-	"economist":    { "occupy_neutral": 0.9, "occupy_enemy": 0.6, "upgrade": 1.2, "build": 1.5, "industry_bonus": 1.6 },
-	"aggressor":    { "occupy_neutral": 0.5, "occupy_enemy": 2.5, "upgrade": 0.3, "build": 0.35, "industry_bonus": 1.0 },
+	"expansionist": { "occupy_neutral": 1.2, "occupy_enemy": 1.0, "upgrade": 0.4, "build": 0.6, "industry_bonus": 1.0, "proximity_bonus": 0.0 },
+	"builder":      { "occupy_neutral": 0.5, "occupy_enemy": 0.7, "upgrade": 2.0, "build": 1.8, "industry_bonus": 1.0, "proximity_bonus": 0.0 },
+	"economist":    { "occupy_neutral": 0.9, "occupy_enemy": 0.6, "upgrade": 1.2, "build": 1.5, "industry_bonus": 1.6, "proximity_bonus": 0.0 },
+	"aggressor":    { "occupy_neutral": 0.5, "occupy_enemy": 2.5, "upgrade": 0.3, "build": 0.35, "industry_bonus": 1.0, "proximity_bonus": 1.5 },
 }
 const PERSONALITY_NAMES: Array = ["expansionist", "builder", "economist", "aggressor"]
 
@@ -155,13 +155,19 @@ func _occupy_score(cell: Cell, p: Dictionary, ind_bonus: float, needs: Dictionar
 	var is_enemy: bool = cell.owner_index != -1
 	var need: float = _cell_need(cell, needs)
 	var contest_factor: float = 0.0 if cell.contested_turns >= 3 else 1.0 / (1.0 + cell.contested_turns * 1.5)
+	var proximity_factor: float = 1.0
+	if p["proximity_bonus"] > 0.0:
+		var enemy_idx: int = (GameState.current_player_index + 1) % GameState.players.size()
+		var ebase: Vector2i = _main._start_positions[enemy_idx]
+		var dist: float = maxf(abs(cell.grid_x - ebase.x), abs(cell.grid_z - ebase.y))
+		proximity_factor = 1.0 + p["proximity_bonus"] * clampf(1.0 - dist / 8.0, 0.0, 1.0)
 	if is_enemy and _main._start_positions[cell.owner_index] == Vector2i(cell.grid_x, cell.grid_z):
-		return S_OCCUPY_ENEMY_BASE * contest_factor
+		return S_OCCUPY_ENEMY_BASE * contest_factor * proximity_factor
 	if is_enemy:
 		match cell.cell_type:
-			Cell.CellType.RESIDENTIAL: return S_OCCUPY_ENEMY_RESIDENTIAL * p["occupy_enemy"] * need * contest_factor
-			Cell.CellType.INDUSTRY:    return S_OCCUPY_ENEMY_INDUSTRY    * p["occupy_enemy"] * ind_bonus * need * contest_factor
-			_:                         return S_OCCUPY_ENEMY_RESOURCE    * p["occupy_enemy"] * ind_bonus * need * contest_factor
+			Cell.CellType.RESIDENTIAL: return S_OCCUPY_ENEMY_RESIDENTIAL * p["occupy_enemy"] * need * contest_factor * proximity_factor
+			Cell.CellType.INDUSTRY:    return S_OCCUPY_ENEMY_INDUSTRY    * p["occupy_enemy"] * ind_bonus * need * contest_factor * proximity_factor
+			_:                         return S_OCCUPY_ENEMY_RESOURCE    * p["occupy_enemy"] * ind_bonus * need * contest_factor * proximity_factor
 	else:
 		match cell.cell_type:
 			Cell.CellType.RESIDENTIAL: return S_OCCUPY_NEUTRAL_RESIDENTIAL * p["occupy_neutral"] * need
