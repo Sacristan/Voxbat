@@ -394,6 +394,48 @@ func _can_upgrade(cell: Cell) -> bool:
 
 # --- Economy ---
 
+func _calc_pass1_sup_mat(player_idx: int, connected: Dictionary) -> Dictionary:
+	var sup := 0; var mat := 0
+	for z in GRID_SIZE:
+		for x in GRID_SIZE:
+			var cell: Cell = grid[z][x]
+			if cell.owner_index != player_idx or not connected.has(Vector2i(x, z)):
+				continue
+			if cell.cell_type != Cell.CellType.RESIDENTIAL:
+				sup += _cell_sup(cell)
+				mat += _cell_mat(cell)
+	sup -= Config.get_value("economy.cell_sup_upkeep") * connected.size()
+	return {"sup": sup, "mat": mat}
+
+
+# Checks which residential cells can't be fed given starting avail_sup/avail_mat.
+# Returns sup_starving, mat_starving bools and a starved array [{pos, sup, mat}].
+func _check_starvation(player_idx: int, connected: Dictionary, avail_sup: int, avail_mat: int) -> Dictionary:
+	var sup_starving := false
+	var mat_starving := false
+	var starved: Array = []
+	for z in GRID_SIZE:
+		for x in GRID_SIZE:
+			var cell: Cell = grid[z][x]
+			if cell.owner_index != player_idx or not connected.has(Vector2i(x, z)):
+				continue
+			if cell.cell_type != Cell.CellType.RESIDENTIAL or cell.upgrade_cooldown > 0 or cell.raze_turns_remaining > 0:
+				continue
+			var sup_need := -_cell_sup(cell)
+			var mat_need := -_cell_mat(cell)
+			var cell_sup_short := sup_need > 0 and avail_sup < sup_need
+			var cell_mat_short := mat_need > 0 and avail_mat < mat_need
+			if cell_sup_short:
+				sup_starving = true
+			if cell_mat_short:
+				mat_starving = true
+			if cell_sup_short or cell_mat_short:
+				starved.append({"pos": Vector2i(x, z), "sup": cell_sup_short, "mat": cell_mat_short})
+			avail_sup = max(0, avail_sup - sup_need)
+			avail_mat = max(0, avail_mat - mat_need)
+	return {"sup_starving": sup_starving, "mat_starving": mat_starving, "starved": starved}
+
+
 func _calc_resource_deltas(player_idx: int) -> Dictionary:
 	var connected := _get_connected_positions(player_idx)
 	var mp := 0; var sup := 0; var mat := 0
@@ -405,13 +447,17 @@ func _calc_resource_deltas(player_idx: int) -> Dictionary:
 			mp += _cell_mp(cell)
 			sup += _cell_sup(cell)
 			mat += _cell_mat(cell)
-	sup -= Config.get_value("economy.cell_sup_upkeep") * connected.size()
+	var upkeep: int = Config.get_value("economy.cell_sup_upkeep") * connected.size()
+	sup -= upkeep
 	var player := GameState.players[player_idx]
 	if player.supplies + sup <= 0:
 		mp += Config.get_value("economy.zero_supply_mp_penalty")
 	if player.materials + mat <= 0:
 		mp += Config.get_value("economy.zero_material_mp_penalty")
-	return {"mp": mp, "sup": sup, "mat": mat}
+	var pass1 := _calc_pass1_sup_mat(player_idx, connected)
+	var starvation := _check_starvation(player_idx, connected,
+		max(0, player.supplies + pass1["sup"]), max(0, player.materials + pass1["mat"]))
+	return {"mp": mp, "sup": sup, "mat": mat, "sup_starving": starvation["sup_starving"], "mat_starving": starvation["mat_starving"]}
 
 
 # Returns winner name on starvation game-over, empty string otherwise.
@@ -438,8 +484,9 @@ func _apply_turn_effects(player_idx: int) -> String:
 			player.supplies = max(0, player.supplies + sup_delta)
 			player.materials = max(0, player.materials + mat_delta)
 	player.supplies = max(0, player.supplies - Config.get_value("economy.cell_sup_upkeep") * connected.size())
-	# Pass 2: check starvation against post-income resources, then apply residential.
-	var residential_starved := false
+	# Pass 2: check starvation against post-pass1 resources, then apply residential.
+	var starvation_result := _check_starvation(player_idx, connected, player.supplies, player.materials)
+	var residential_starved: bool = starvation_result["sup_starving"] or starvation_result["mat_starving"]
 	for z in GRID_SIZE:
 		for x in GRID_SIZE:
 			var cell: Cell = grid[z][x]
@@ -447,11 +494,6 @@ func _apply_turn_effects(player_idx: int) -> String:
 				continue
 			if cell.cell_type != Cell.CellType.RESIDENTIAL:
 				continue
-			if cell.upgrade_cooldown == 0:
-				var sup_need := -_cell_sup(cell)
-				var mat_need := -_cell_mat(cell)
-				if player.supplies < sup_need or player.materials < mat_need:
-					residential_starved = true
 			var mp_delta := _cell_mp(cell)
 			var sup_delta := _cell_sup(cell)
 			var mat_delta := _cell_mat(cell)
@@ -770,7 +812,6 @@ func _compute_resource_breakdown(which: String) -> String:
 
 
 func _update_shortage_indicators() -> void:
-	# Reset all cells first
 	for z in GRID_SIZE:
 		for x in GRID_SIZE:
 			(grid[z][x] as Cell).set_shortage(false)
@@ -778,12 +819,23 @@ func _update_shortage_indicators() -> void:
 	for player_idx in GameState.players.size():
 		var player := GameState.players[player_idx]
 		var connected := _get_connected_positions(player_idx)
+		var pass1 := _calc_pass1_sup_mat(player_idx, connected)
+		var starvation := _check_starvation(player_idx, connected,
+			max(0, player.supplies + pass1["sup"]), max(0, player.materials + pass1["mat"]))
+		for s in starvation["starved"]:
+			var pos: Vector2i = s["pos"]
+			var res: Array[String] = []
+			if s["sup"]: res.append("SUP")
+			if s["mat"]: res.append("MAT")
+			grid[pos.y][pos.x].set_shortage(true, ", ".join(res) + " Shortage")
 		for z in GRID_SIZE:
 			for x in GRID_SIZE:
 				var cell: Cell = grid[z][x]
 				if cell.owner_index != player_idx or not connected.has(Vector2i(x, z)):
 					continue
 				if cell.raze_turns_remaining > 0 or cell.upgrade_cooldown > 0:
+					continue
+				if cell.cell_type == Cell.CellType.RESIDENTIAL:
 					continue
 				var res: Array[String] = []
 				if -_cell_mp(cell) > 0 and player.manpower <= 0:
@@ -812,5 +864,5 @@ func _cmd_god(_args: Array) -> void:
 func _update_hud() -> void:
 	var deltas := _calc_resource_deltas(GameState.current_player_index)
 	hud.update_turn(GameState.current_player().player_name)
-	hud.update_resources(GameState.current_player(), deltas["mp"], deltas["sup"], deltas["mat"])
+	hud.update_resources(GameState.current_player(), deltas["mp"], deltas["sup"], deltas["mat"], deltas["sup_starving"], deltas["mat_starving"])
 	_update_shortage_indicators()
