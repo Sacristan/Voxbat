@@ -405,6 +405,7 @@ func _calc_resource_deltas(player_idx: int) -> Dictionary:
 			mp += _cell_mp(cell)
 			sup += _cell_sup(cell)
 			mat += _cell_mat(cell)
+	sup -= Config.get_value("economy.cell_sup_upkeep") * connected.size()
 	var player := GameState.players[player_idx]
 	if player.supplies + sup <= 0:
 		mp += Config.get_value("economy.zero_supply_mp_penalty")
@@ -436,6 +437,7 @@ func _apply_turn_effects(player_idx: int) -> String:
 			player.manpower = max(0, player.manpower + mp_delta)
 			player.supplies = max(0, player.supplies + sup_delta)
 			player.materials = max(0, player.materials + mat_delta)
+	player.supplies = max(0, player.supplies - Config.get_value("economy.cell_sup_upkeep") * connected.size())
 	# Pass 2: check starvation against post-income resources, then apply residential.
 	var residential_starved := false
 	for z in GRID_SIZE:

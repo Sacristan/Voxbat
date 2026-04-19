@@ -29,10 +29,10 @@ const OWN_RAZE_THRESHOLD  := 20.0
 const SUSTAIN_PENALTY_RATE := 0.15
 
 const PERSONALITIES: Dictionary = {
-	"expansionist": { "occupy_neutral": 1.2, "occupy_enemy": 1.0, "upgrade": 0.4, "build": 0.6, "industry_bonus": 1.0, "proximity_bonus": 0.0 },
-	"builder":      { "occupy_neutral": 0.8, "occupy_enemy": 0.7, "upgrade": 1.4, "build": 1.8, "industry_bonus": 1.0, "proximity_bonus": 0.0 },
-	"economist":    { "occupy_neutral": 0.9, "occupy_enemy": 0.6, "upgrade": 1.2, "build": 1.5, "industry_bonus": 1.6, "proximity_bonus": 0.0 },
-	"aggressor":    { "occupy_neutral": 0.5, "occupy_enemy": 2.5, "upgrade": 0.3, "build": 0.35, "industry_bonus": 1.0, "proximity_bonus": 1.5 },
+	"expansionist": { "occupy_neutral": 1.2, "occupy_enemy": 1.0, "upgrade": 0.4, "build": 0.6, "industry_bonus": 1.0, "proximity_bonus": 0.0, "mobilize": 1.0 },
+	"builder":      { "occupy_neutral": 0.8, "occupy_enemy": 0.7, "upgrade": 1.4, "build": 1.8, "industry_bonus": 1.0, "proximity_bonus": 0.0, "mobilize": 1.0 },
+	"economist":    { "occupy_neutral": 0.9, "occupy_enemy": 0.6, "upgrade": 1.2, "build": 1.5, "industry_bonus": 1.6, "proximity_bonus": 0.0, "mobilize": 1.0 },
+	"aggressor":    { "occupy_neutral": 0.5, "occupy_enemy": 2.5, "upgrade": 0.3, "build": 0.35, "industry_bonus": 1.0, "proximity_bonus": 1.5, "mobilize": 0.5 },
 }
 const PERSONALITY_NAMES: Array = ["expansionist", "builder", "economist", "aggressor"]
 
@@ -70,7 +70,7 @@ func _try_action() -> void:
 	_collect_upgrades(candidates, p, needs)
 	_collect_builds(candidates, p, needs)
 	_collect_razes(candidates, p, needs, player)
-	_collect_mobilizes(candidates, needs)
+	_collect_mobilizes(candidates, p, needs)
 	if candidates.is_empty():
 		return
 	candidates.shuffle()
@@ -188,11 +188,18 @@ func _occupy_score(cell: Cell, p: Dictionary, ind_bonus: float, needs: Dictionar
 
 
 func _collect_upgrades(candidates: Array, p: Dictionary, needs: Dictionary) -> void:
+	var idx: int = GameState.current_player_index
+	var deltas: Dictionary = _main._calc_resource_deltas(idx)
 	for row in _main.grid:
 		for c in row:
 			var cell: Cell = c as Cell
 			if not _main._can_upgrade(cell):
 				continue
+			# Guard: skip industry upgrade if it would push projected SUP/turn negative
+			if cell.cell_type == Cell.CellType.INDUSTRY:
+				var drain_delta: Dictionary = _upgrade_drain_delta(cell)
+				if deltas["sup"] + drain_delta["sup"] < 0:
+					continue
 			var base: float = S_UPGRADE_PER_LEVEL * cell.cell_level
 			if cell.cell_type == Cell.CellType.RESIDENTIAL:
 				base += S_UPGRADE_RESIDENTIAL_BONUS
@@ -292,16 +299,23 @@ func _collect_razes(candidates: Array, p: Dictionary, needs: Dictionary, player:
 				candidates.append([_enemy_raze_score(cell, p), "raze", cell])
 
 
-func _collect_mobilizes(candidates: Array, needs: Dictionary) -> void:
+func _collect_mobilizes(candidates: Array, p: Dictionary, needs: Dictionary) -> void:
+	var player: PlayerData = GameState.current_player()
+	var mat_costs: Array = Config.get_value("mobilize.residential_mat_costs")
+	var mp_yields: Array = Config.get_value("mobilize.residential_mp_yields")
 	for row in _main.grid:
 		for c in row:
 			var cell: Cell = c as Cell
 			if not _main._can_mobilize(cell):
 				continue
-			var mp_yields: Array = Config.get_value("mobilize.residential_mp_yields")
+			var mat_cost: int = mat_costs[cell.cell_level - 1]
+			if player.materials < mat_cost:
+				continue
 			var mp_yield: float = float(mp_yields[cell.cell_level - 1])
-			# Attractive when MP is scarce; discounted when MAT is already scarce
-			var score: float = mp_yield * needs["mp"] * S_MOBILIZE_BASE / maxf(1.0, needs["mat"])
+			# Penalise when mobilize would leave too little MAT for infrastructure builds
+			var mat_after: float = float(player.materials - mat_cost)
+			var mat_reserve: float = minf(1.0, mat_after / 40.0)
+			var score: float = mp_yield * needs["mp"] * S_MOBILIZE_BASE * p["mobilize"] / maxf(1.0, needs["mat"]) * mat_reserve
 			candidates.append([score, "mobilize", cell])
 
 
