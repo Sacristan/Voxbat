@@ -24,7 +24,8 @@ anchor_bottom = 1.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
 layout_mode = 2
-theme_override_constants/separation = 24
+custom_minimum_size = Vector2(420, 0)
+theme_override_constants/separation = 16
 
 [node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
@@ -32,36 +33,48 @@ theme_override_font_sizes/font_size = 48
 text = "MULTIPLAYER"
 horizontal_alignment = 1
 
-[node name="HostButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="HostRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
-custom_minimum_size = Vector2(240, 48)
+theme_override_constants/separation = 8
+
+[node name="HostNameField" type="LineEdit" parent="CenterContainer/VBoxContainer/HostRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HostButton" type="Button" parent="CenterContainer/VBoxContainer/HostRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 0)
 text = "HOST"
 
 [node name="HSeparator" type="HSeparator" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="JoinLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+[node name="BrowseHeader" type="HBoxContainer" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
-text = "Join Game"
-horizontal_alignment = 1
 
-[node name="JoinRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="IPLineEdit" type="LineEdit" parent="CenterContainer/VBoxContainer/JoinRow"]
+[node name="BrowseLabel" type="Label" parent="CenterContainer/VBoxContainer/BrowseHeader"]
 layout_mode = 2
 size_flags_horizontal = 3
-placeholder_text = "127.0.0.1"
+text = "Available Games"
+vertical_alignment = 1
 
-[node name="JoinButton" type="Button" parent="CenterContainer/VBoxContainer/JoinRow"]
+[node name="RefreshButton" type="Button" parent="CenterContainer/VBoxContainer/BrowseHeader"]
 layout_mode = 2
-custom_minimum_size = Vector2(80, 0)
-text = "JOIN"
+text = "REFRESH"
+
+[node name="GameScrollContainer" type="ScrollContainer" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 160)
+
+[node name="GameListContainer" type="VBoxContainer" parent="CenterContainer/VBoxContainer/GameScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
 
 [node name="StatusLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="BackButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2

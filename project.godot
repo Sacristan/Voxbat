@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 Config="*res://scripts/config.gd"
 GameState="*res://scripts/game_state.gd"
+MasterServer="*res://scripts/master_server.gd"
 ConsoleController="*res://addons/ahhnold_console/console_controller.gd"
 
 [editor_plugins]

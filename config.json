@@ -79,6 +79,9 @@
   "ai": {
 	"player_personalities": ["random", "random"]
   },
+  "firebase": {
+	"database_url": "https://hexgame-e7dec-default-rtdb.europe-west1.firebasedatabase.app"
+  },
   "camera": {
 	"pan_speed":     15.0,
 	"zoom_speed":    3.0,
