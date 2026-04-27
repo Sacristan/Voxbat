@@ -27,6 +27,7 @@ var _firebase_available: bool = false
 
 
 func _ready() -> void:
+	get_tree().auto_accept_quit = false
 	_cleanup_previous_session()
 
 	host_name_field.text = _random_name()
@@ -41,6 +42,25 @@ func _ready() -> void:
 	else:
 		_firebase_available = true
 		_refresh_game_list()
+
+
+func _exit_tree() -> void:
+	get_tree().auto_accept_quit = true
+	if _firebase_available and not _hosted_game_key.is_empty():
+		MasterServer.unregister_game(_hosted_game_key)
+		_hosted_game_key = ""
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_handle_quit_request()
+
+
+func _handle_quit_request() -> void:
+	if _firebase_available and not _hosted_game_key.is_empty():
+		await MasterServer.unregister_game(_hosted_game_key)
+		_hosted_game_key = ""
+	get_tree().quit()
 
 
 func _cleanup_previous_session() -> void:
@@ -131,11 +151,17 @@ func _on_peer_disconnected(_id: int) -> void:
 func _on_session_left() -> void:
 	_set_status("Session ended.")
 	_set_ui_busy(false)
+	if _firebase_available and not _hosted_game_key.is_empty():
+		await MasterServer.unregister_game(_hosted_game_key)
+		_hosted_game_key = ""
 
 
 func _on_tube_error(_code: int, message: String) -> void:
 	_set_status("Error: %s" % message)
 	_set_ui_busy(false)
+	if _firebase_available and not _hosted_game_key.is_empty():
+		await MasterServer.unregister_game(_hosted_game_key)
+		_hosted_game_key = ""
 
 
 func _on_back_pressed() -> void:
