@@ -36,6 +36,7 @@ var _pending_session_id: String = ""
 var _pending_password_hash: String = ""
 var _list_etag: String = ""
 var _refresh_timer: Timer
+var _is_refreshing: bool = false
 
 
 func _ready() -> void:
@@ -243,6 +244,9 @@ func _on_refresh_pressed() -> void:
 
 
 func _refresh_game_list(show_loading: bool = true) -> void:
+	if _is_refreshing:
+		return
+	_is_refreshing = true
 	refresh_btn.disabled = true
 	if show_loading:
 		_clear_game_list()
@@ -256,6 +260,7 @@ func _refresh_game_list(show_loading: bool = true) -> void:
 
 	if response["games"] == null:
 		refresh_btn.disabled = false
+		_is_refreshing = false
 		return
 
 	_clear_game_list()
@@ -277,6 +282,7 @@ func _refresh_game_list(show_loading: bool = true) -> void:
 			game_list_container.add_child(btn)
 
 	refresh_btn.disabled = false
+	_is_refreshing = false
 
 
 func _clear_game_list() -> void:
@@ -287,6 +293,11 @@ func _clear_game_list() -> void:
 func _set_ui_busy(busy: bool) -> void:
 	host_btn.disabled = busy
 	refresh_btn.disabled = busy
+	if _refresh_timer:
+		if busy:
+			_refresh_timer.stop()
+		else:
+			_refresh_timer.start()
 
 
 func _set_status(text: String) -> void:
