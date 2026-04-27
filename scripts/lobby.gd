@@ -59,7 +59,7 @@ func _ready() -> void:
 		_firebase_available = true
 		_refresh_game_list()
 		_refresh_timer = Timer.new()
-		_refresh_timer.wait_time = 5.0
+		_refresh_timer.wait_time = 10.0
 		_refresh_timer.timeout.connect(func(): _refresh_game_list(false))
 		add_child(_refresh_timer)
 		_refresh_timer.start()
