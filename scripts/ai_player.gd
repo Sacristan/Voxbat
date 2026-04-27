@@ -68,7 +68,8 @@ func setup(main_node) -> void:
 				pname = PERSONALITY_NAMES[randi() % PERSONALITY_NAMES.size()]
 		_personalities.append(PERSONALITIES[pname])
 		_pnames.append(pname)
-		print("AI Player %d (%s): %s" % [i, GameState.players[i].player_name, pname])
+		if GameState.ai_flags[i]:
+			print("AI Player %d (%s): %s" % [i, GameState.players[i].player_name, pname])
 	if use_schedule:
 		print("Session %d / %d: %s vs %s" % [_session_index + 1, schedule.size(), _pnames[0], _pnames[1]])
 		_session_index += 1
