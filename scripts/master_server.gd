@@ -46,22 +46,36 @@ func unregister_game(key: String) -> void:
 	print("MasterServer: unregister_game result=", result[0], " code=", result[1])
 
 
-func list_games() -> Array:
+## Returns {"games": Array, "etag": String} on success/change,
+## or {"games": null, "etag": String} when server returns 304 (unchanged).
+func list_games(etag: String = "") -> Dictionary:
+	var headers: Array[String] = []
+	if not etag.is_empty():
+		headers = ["If-None-Match: " + etag]
 	var http := HTTPRequest.new()
 	add_child(http)
-	var err := http.request(_db_url + "/games.json")
-	print("MasterServer: list_games request err=", err)
+	http.request(_db_url + "/games.json", headers)
 	var result: Array = await http.request_completed
 	http.queue_free()
-	print("MasterServer: list_games result=", result[0], " code=", result[1], " body=", result[3].get_string_from_utf8())
+
+	if result[1] == 304:
+		return {"games": null, "etag": etag}
+
 	if result[0] != OK or result[1] != 200:
-		return []
+		return {"games": [], "etag": etag}
+
+	var new_etag := etag
+	for header: String in result[2]:
+		if header.to_lower().begins_with("etag:"):
+			new_etag = header.substr(5).strip_edges()
+			break
+
 	var text: String = result[3].get_string_from_utf8()
 	if text.strip_edges() == "null":
-		return []
+		return {"games": [], "etag": new_etag}
 	var data = JSON.parse_string(text)
 	if not data is Dictionary:
-		return []
+		return {"games": [], "etag": new_etag}
 	var now := Time.get_unix_time_from_system()
 	var games: Array = []
 	for key in data:
@@ -69,4 +83,4 @@ func list_games() -> Array:
 		if now - entry.get("timestamp", 0) < STALE_SECONDS:
 			entry["key"] = key
 			games.append(entry)
-	return games
+	return {"games": games, "etag": new_etag}

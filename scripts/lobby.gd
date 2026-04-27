@@ -34,6 +34,8 @@ var _firebase_available: bool = false
 var _pending_game_name: String = ""
 var _pending_session_id: String = ""
 var _pending_password_hash: String = ""
+var _list_etag: String = ""
+var _refresh_timer: Timer
 
 
 func _ready() -> void:
@@ -56,6 +58,11 @@ func _ready() -> void:
 	else:
 		_firebase_available = true
 		_refresh_game_list()
+		_refresh_timer = Timer.new()
+		_refresh_timer.wait_time = 5.0
+		_refresh_timer.timeout.connect(func(): _refresh_game_list(false))
+		add_child(_refresh_timer)
+		_refresh_timer.start()
 
 
 func _exit_tree() -> void:
@@ -235,17 +242,24 @@ func _on_refresh_pressed() -> void:
 	_refresh_game_list()
 
 
-func _refresh_game_list() -> void:
+func _refresh_game_list(show_loading: bool = true) -> void:
 	refresh_btn.disabled = true
-	_clear_game_list()
-	var placeholder := Label.new()
-	placeholder.text = "Loading..."
-	placeholder.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	game_list_container.add_child(placeholder)
+	if show_loading:
+		_clear_game_list()
+		var placeholder := Label.new()
+		placeholder.text = "Loading..."
+		placeholder.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		game_list_container.add_child(placeholder)
 
-	var games: Array = await MasterServer.list_games()
-	_clear_game_list()
+	var response: Dictionary = await MasterServer.list_games(_list_etag)
+	_list_etag = response["etag"]
 
+	if response["games"] == null:
+		refresh_btn.disabled = false
+		return
+
+	_clear_game_list()
+	var games: Array = response["games"]
 	if games.is_empty():
 		var lbl := Label.new()
 		lbl.text = "No games found."
