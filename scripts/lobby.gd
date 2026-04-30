@@ -1,6 +1,6 @@
 extends Control
 
-const APP_ID := "Hexfront_v1.0_app"
+const APP_ID := "Hexfront_v1.0_a"
 const TRACKER_URLS: Array[String] = [
 	"wss://tracker.openwebtorrent.com",
 	"wss://tracker.webtorrent.dev",
