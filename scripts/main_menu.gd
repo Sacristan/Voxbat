@@ -4,12 +4,17 @@ extends Control
 @onready var vs_ai_btn: Button = $CenterContainer/VBoxContainer/VsAIButton
 @onready var ai_vs_ai_btn: Button = $CenterContainer/VBoxContainer/AIvsAIButton
 @onready var multiplayer_versus_btn: Button = $CenterContainer/VBoxContainer/MultiplayerVersusButton
+@onready var how_to_play_btn: Button = $CenterContainer/VBoxContainer/HowToPlayButton
+@onready var how_to_play_panel: Control = $HowToPlayPanel
+@onready var close_btn: Button = $HowToPlayPanel/CenterContainer/PanelContainer/MarginContainer/VBox/CloseButton
 
 func _ready() -> void:
 	local_versus_btn.pressed.connect(_on_local_versus_pressed)
 	vs_ai_btn.pressed.connect(_on_vs_ai_pressed)
 	ai_vs_ai_btn.pressed.connect(_on_ai_vs_ai_pressed)
 	multiplayer_versus_btn.pressed.connect(_on_multiplayer_versus_pressed)
+	how_to_play_btn.pressed.connect(func(): how_to_play_panel.visible = true)
+	close_btn.pressed.connect(func(): how_to_play_panel.visible = false)
 	ai_vs_ai_btn.visible = OS.has_feature("editor")
 	if GameState.ai_flags[0] and GameState.ai_flags[1]:
 		get_tree().change_scene_to_file.call_deferred("res://main.tscn")
