@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Voxbat is a turn-based hex-grid strategy game built in **Godot 4** using **GDScript**. Two players compete on a 5×5 flat-top hex grid, expanding territory, managing three resources (Manpower, Supplies, Materials), and winning by occupying an enemy Residential cell or triggering opponent starvation.
+Hexfront is a turn-based hex-grid strategy game built in **Godot 4** using **GDScript**. Two players compete on a 5×5 flat-top hex grid, expanding territory, managing three resources (Manpower, Supplies, Materials), and winning by occupying an enemy Residential cell or triggering opponent starvation.
 
 ## Running the Game
 

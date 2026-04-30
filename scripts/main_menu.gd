@@ -10,6 +10,7 @@ func _ready() -> void:
 	vs_ai_btn.pressed.connect(_on_vs_ai_pressed)
 	ai_vs_ai_btn.pressed.connect(_on_ai_vs_ai_pressed)
 	multiplayer_versus_btn.pressed.connect(_on_multiplayer_versus_pressed)
+	ai_vs_ai_btn.visible = OS.has_feature("editor")
 	if GameState.ai_flags[0] and GameState.ai_flags[1]:
 		get_tree().change_scene_to_file.call_deferred("res://main.tscn")
 

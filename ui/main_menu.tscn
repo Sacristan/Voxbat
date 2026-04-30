@@ -29,25 +29,39 @@ theme_override_constants/separation = 24
 [node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
-text = "VOXBAT"
+text = "HEXFRONT"
 horizontal_alignment = 1
 
 [node name="LocalVersusButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(240, 48)
-text = "LOCAL VERSUS"
+text = "VERSUS LOCAL"
 
 [node name="VsAIButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(240, 48)
-text = "VS AI"
+text = "VERSUS AI"
+
+[node name="MultiplayerVersusButton" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 48)
+text = "VERSUS MULTIPLAYER"
 
 [node name="AIvsAIButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(240, 48)
 text = "AI VS AI"
 
-[node name="MultiplayerVersusButton" type="Button" parent="CenterContainer/VBoxContainer"]
-layout_mode = 2
-custom_minimum_size = Vector2(240, 48)
-text = "MULTIPLAYER VERSUS"
+[node name="CreditsLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -190.0
+offset_top = -36.0
+offset_right = -4.0
+offset_bottom = -12.0
+theme_override_font_sizes/font_size = 12
+text = "Made w Godot by Kesteris"
