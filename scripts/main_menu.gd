@@ -20,6 +20,8 @@ func _ready() -> void:
 	var vf := FileAccess.open("res://version.txt", FileAccess.READ)
 	if vf:
 		version_label.text = vf.get_as_text().strip_edges()
+	else:
+		version_label.text = "err:%d" % FileAccess.get_open_error()
 	if GameState.ai_flags[0] and GameState.ai_flags[1]:
 		get_tree().change_scene_to_file.call_deferred("res://main.tscn")
 

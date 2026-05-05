@@ -8,8 +8,7 @@ var _db_url: String = ""
 
 func _ready() -> void:
 	_db_url = Config.get_value("firebase.database_url").rstrip("/")
-	if OS.is_debug_build(): print("MasterServer: db_url = ", _db_url)
-
+	#if OS.is_debug_build(): print("MasterServer: db_url = ", _db_url)
 
 func register_game(game_name: String, session_id: String, password_hash: String = "") -> String:
 	var entry: Dictionary = {
